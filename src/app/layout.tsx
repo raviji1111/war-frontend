@@ -25,14 +25,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-slate-200`}>
-        {/* Ye Navbar ab har page ke upar fix rahega */}
+      <head>
+        <meta name="google-site-verification" content="TH92158WBzr6Hrq7JyyxL8rGbkxZv6bOIQ2tSy8o4Fk" />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Navbar />
-        
-        {/* Ye line ke aage tumhara main page content load hoga */}
-        <div>
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
