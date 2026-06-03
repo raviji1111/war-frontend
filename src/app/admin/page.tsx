@@ -33,19 +33,20 @@ export default function AdminRoom() {
       if (gRes.ok) setGroups(gData.groups || []);
 
       setLoading(false);
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); setLoading(false); }
   };
 
   useEffect(() => {
-    // SECURITY CHECK: Email verify karo
     const userEmail = localStorage.getItem("user_email");
-    if (userEmail !== "ravik61285@gmail.com") {
-      alert("⚠️ Unauthorized Access!");
-      router.push("/dashboard"); // Unauthorized ko bhaga do
+    
+    // STRICT SECURITY CHECK
+    // Agar email match nahi kiya, toh turant dashboard bhej do
+    if (userEmail?.toLowerCase() !== "ravik61285@gmail.com") {
+      router.replace("/dashboard"); 
     } else {
-      fetchData(); // Sirf Admin hai to data fetch karo
+      fetchData();
     }
-  }, []);
+  }, [router]);
 
   const handleBan = async () => {
     const token = localStorage.getItem("war_token");

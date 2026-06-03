@@ -7,25 +7,29 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // Admin check
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("war_token");
-    const userEmail = localStorage.getItem("user_email");
+    const userEmail = localStorage.getItem("user_email") || "";
     
     setIsLoggedIn(!!token);
-    // Yahan tera admin email check ho raha hai
-    setIsAdmin(userEmail === "ravik61285@gmail.com");
+
+    // FIX: .toLowerCase() aur .trim() lagaya hai taaki email case-sensitive na rahe
+    // Agar user_email mein space ho ya capital letter, tab bhi ye check pass ho jayega
+    const normalizedEmail = userEmail.toLowerCase().trim();
+    setIsAdmin(normalizedEmail === "ravik61285@gmail.com");
+    
   }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("war_token");
-    localStorage.removeItem("user_email"); // Email bhi remove karo
+    localStorage.removeItem("user_email");
     router.push("/login");
   };
 
   const isAuthPage = pathname === "/login" || pathname === "/signup";
-  if (isAuthPage) return null; // Auth page par navbar nahi dikhana hai to ye rakho
+  if (isAuthPage) return null;
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-zinc-800 bg-[#050508] h-20 flex items-center px-10">
@@ -44,7 +48,7 @@ export default function Navbar() {
           <Link href="/dashboard" className={pathname === '/dashboard' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'hover:text-white'}>DASHBOARD</Link>
           <Link href="/leaderboard" className="hover:text-white">LEADERBOARD</Link>
           
-          {/* SIRF ADMIN KO DIKHEGA */}
+          {/* Admin link secure ho chuka hai */}
           {isAdmin && (
              <Link href="/admin" className={pathname === '/admin' ? 'text-red-500 border-b-2 border-red-500' : 'hover:text-red-500'}>ADMIN</Link>
           )}
