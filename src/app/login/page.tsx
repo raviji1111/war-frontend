@@ -27,9 +27,8 @@ export default function LoginPage() {
     setMessage("");
     setIsLoading(true);
 
-   // Line 28 ko replace karke ye likho:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || `${API_BASE_URL}`;
-const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || `${API_BASE_URL}`;
+    const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
     
     const payload = isLoginMode 
       ? new URLSearchParams({ username: email, password: password })
@@ -51,6 +50,20 @@ const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
       if (response.ok) {
         if (isLoginMode) {
           localStorage.setItem("war_token", data.access_token);
+          
+          // 🔥 NEW FIX: Login ke baad User Profile fetch karo aur email save karo
+          try {
+            const userRes = await fetch(`${API_BASE_URL}/users/me`, {
+              headers: { "Authorization": `Bearer ${data.access_token}` }
+            });
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              localStorage.setItem("user_email", userData.email); // Yahan email save ho gaya!
+            }
+          } catch (err) {
+            console.error("Could not fetch user profile", err);
+          }
+
           setMessage("✅ Access Granted! Entering WAR room...");
           setTimeout(() => {
             window.location.href = "/dashboard";
@@ -71,10 +84,9 @@ const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
     }
   };
 
+  // ... (Baaki ka UI code waisa ka waisa hi rakho, niche copy-paste kar dena)
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-4 font-sans text-slate-200">
-      
-      {/* 🛡️ YE NAVBAR SIRF LOGO DIKHAYEGA - KOI MENU LINKS NAHI */}
       <nav className="fixed top-0 w-full p-8 flex justify-start items-center">
         <div className="text-2xl font-black tracking-wider text-slate-100">
           <span className="text-amber-500">WAR</span> Project
@@ -82,7 +94,6 @@ const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
       </nav>
 
       <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/40 p-8 backdrop-blur-xl shadow-2xl">
-        
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-200 to-blue-400">
             {isLoginMode ? "Forge Your Account" : "Enlist in WAR"}
