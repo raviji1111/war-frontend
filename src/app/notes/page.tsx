@@ -7,6 +7,7 @@ interface Note {
   title: string;
   content: string;
 }
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -30,7 +31,7 @@ export default function NotesPage() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/notes", {
+      const response = await fetch("${API_BASE_URL}/notes", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -56,7 +57,7 @@ export default function NotesPage() {
     const token = localStorage.getItem("war_token");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/notes", {
+      const response = await fetch("${API_BASE_URL}/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

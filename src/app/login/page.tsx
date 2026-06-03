@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
+
 export default function LoginPage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [name, setName] = useState("");
@@ -26,7 +28,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
    // Line 28 ko replace karke ye likho:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${API_BASE_URL}";
 const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
     
     const payload = isLoginMode 

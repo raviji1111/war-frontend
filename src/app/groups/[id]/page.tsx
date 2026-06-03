@@ -22,6 +22,7 @@ interface Quiz {
   user_answer?: string | null; // Backend se aane wala purana jawab
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
 export default function GroupIntelPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]); 
@@ -49,13 +50,13 @@ export default function GroupIntelPage() {
 
     try {
       // 1. Fetch Posts Intel
-      const postsResponse = await fetch(`http://127.0.0.1:8000/groups/${groupId}/posts`, {
+      const postsResponse = await fetch(`${API_BASE_URL}/groups/${groupId}/posts`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       const postsData = await postsResponse.json();
 
       // 2. Fetch Live Quizzes Intel
-      const quizzesResponse = await fetch(`http://127.0.0.1:8000/groups/${groupId}/quizzes`, {
+      const quizzesResponse = await fetch(`${API_BASE_URL}/groups/${groupId}/quizzes`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       const quizzesData = await quizzesResponse.json();
@@ -133,7 +134,7 @@ export default function GroupIntelPage() {
     const secondsTaken = Math.max(1, Math.floor((Date.now() - pageLoadTime) / 1000));
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/quizzes/${quizId}/submit`, {
+      const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -7,6 +7,7 @@ interface Group {
   name: string;
   description: string;
 }
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -19,7 +20,7 @@ export default function GroupsPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/groups");
+      const response = await fetch("${API_BASE_URL}/groups");
       if (response.ok) {
         const data = await response.json();
         setGroups(data.groups || []);
@@ -38,7 +39,7 @@ export default function GroupsPage() {
 
     setMessage("Processing Request...");
     try {
-      const response = await fetch(`http://127.0.0.1:8000/groups/${groupId}/join`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/join`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });

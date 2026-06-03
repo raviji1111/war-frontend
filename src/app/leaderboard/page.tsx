@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
+
 export default function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function Leaderboard() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/leaderboard");
+        const response = await fetch("${API_BASE_URL}/leaderboard");
         if (!response.ok) {
           throw new Error("Failed to fetch data");
         }

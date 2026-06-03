@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://war-backend-1.onrender.com";
 
 const getErrorMessage = (error: any) => {
   if (error instanceof TypeError && error.message === "Failed to fetch") {
@@ -104,7 +105,7 @@ export default function Dashboard() {
     if (!token) return;
     try {
       const todayDate = new Date().toISOString().split('T')[0];
-      const response = await fetch("http://127.0.0.1:8000/study-session", {
+      const response = await fetch("${API_BASE_URL}/study-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,7 +173,7 @@ export default function Dashboard() {
     const token = localStorage.getItem("war_token");
     if (!token) return;
     try {
-      const res = await fetch("http://127.0.0.1:8000/analytics", {
+      const res = await fetch("${API_BASE_URL}/analytics", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -202,7 +203,7 @@ export default function Dashboard() {
     const token = localStorage.getItem("war_token");
     setFeedbackMessage("Transmitting logs to the high command...");
     try {
-      const response = await fetch("http://127.0.0.1:8000/feedback", {
+      const response = await fetch("${API_BASE_URL}/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
