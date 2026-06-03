@@ -14,7 +14,6 @@ export default function AdminRoom() {
   // Form States
   const [banId, setBanId] = useState("");
   const [grpName, setGrpName] = useState("");
-  const [postContent, setPostContent] = useState("");
   const [quizData, setQuizData] = useState({ gid: "", q: "", a: "", b: "", c: "", d: "", correct: "A" });
 
   const fetchData = async () => {
@@ -37,7 +36,16 @@ export default function AdminRoom() {
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    // SECURITY CHECK: Email verify karo
+    const userEmail = localStorage.getItem("user_email");
+    if (userEmail !== "ravik61285@gmail.com") {
+      alert("⚠️ Unauthorized Access!");
+      router.push("/dashboard"); // Unauthorized ko bhaga do
+    } else {
+      fetchData(); // Sirf Admin hai to data fetch karo
+    }
+  }, []);
 
   const handleBan = async () => {
     const token = localStorage.getItem("war_token");
@@ -66,7 +74,7 @@ export default function AdminRoom() {
     alert("Quiz Deployed!");
   };
 
-  if (loading) return <div className="text-white text-center mt-20">Loading WAR Room...</div>;
+  if (loading) return <div className="text-white text-center mt-20">Verifying Admin Access...</div>;
 
   return (
     <main className="min-h-screen bg-zinc-950 p-8 text-zinc-200">
