@@ -8,7 +8,24 @@ export default function Dashboard() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
-  // 1. Timer Logic & Auto-Exit Status
+  // 1. Fullscreen Toggle
+  const toggleTimer = async () => {
+    if (!isActive) {
+      try {
+        await document.documentElement.requestFullscreen();
+        setIsActive(true);
+      } catch (e) {
+        alert("Full-screen mode is required to start.");
+      }
+    } else {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+      setIsActive(false);
+    }
+  };
+
+  // 2. Timer Logic
   useEffect(() => {
     let interval: any = null;
     if (isActive) {
@@ -22,24 +39,33 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [isActive]);
 
-  // 2. Security: Shortcuts/Keys Blocking
+  // 3. Security: ESC Key, Fullscreen Exit, Tab Switch, Refresh Block
   useEffect(() => {
+    audioRef.current = new Audio('/alert.mp3');
+
+    const triggerAlarm = () => {
+        audioRef.current?.play().catch(e => console.log("Audio blocked"));
+        alert("SECURITY BREACH! Stay in full-screen mode!");
+    };
+
+    // A. Detect Fullscreen Exit
+    const handleFullscreenChange = () => {
+      if (isActive && !document.fullscreenElement) {
+        triggerAlarm();
+      }
+    };
+
+    // B. Detect ESC Key (Backup)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isActive) {
-        if (e.key === "F5" || (e.ctrlKey && (e.key === "r" || e.key === "w" || e.key === "t"))) {
+        if (e.key === "Escape" || e.key === "F5" || (e.ctrlKey && (e.key === "r" || e.key === "w" || e.key === "t"))) {
           e.preventDefault();
-          alert("Security Lock: You cannot refresh or exit during the exam!");
+          triggerAlarm();
         }
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isActive]);
 
-  // 3. Security: Tab Switch Detection (Audio)
-  useEffect(() => {
-    audioRef.current = new Audio('/alert.mp3'); // Ensure alert.mp3 is in /public folder
-
+    // C. Tab Switch Detection
     const handleVisibilityChange = () => {
       if (isActive) {
         if (document.hidden) {
@@ -51,56 +77,46 @@ export default function Dashboard() {
       }
     };
 
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isActive]);
 
   const handleAutoExit = () => {
     localStorage.setItem("timer_active", "false");
-    router.push("/dashboard"); 
-  };
-
-  // 4. Timer Format
-  const formatTime = (totalSeconds: number) => {
-    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, "0");
-    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, "0");
-    const s = (totalSeconds % 60).toString().padStart(2, "0");
-    return `${h} : ${m} : ${s}`;
+    if (document.fullscreenElement) document.exitFullscreen();
+    router.push("/dashboard");
   };
 
   return (
     <main className="min-h-screen bg-[url('https://images.unsplash.com/photo-1497633762265-9d176722d3b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center flex flex-col items-center justify-center text-white relative">
       <div className="absolute inset-0 bg-black/80"></div>
 
-      {/* Timer Display */}
-      <div className="relative z-10 text-7xl font-mono tracking-widest mb-10 text-zinc-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-        {formatTime(seconds)}
+      <div className="relative z-10 text-7xl font-mono tracking-widest mb-10 text-zinc-100">
+        {new Date(seconds * 1000).toISOString().substr(11, 8)}
       </div>
 
-      {/* Initialize Button */}
       {!isActive && (
-        <button 
-          onClick={() => setIsActive(true)} 
-          className="relative z-10 bg-white text-black font-bold px-8 py-3 rounded hover:bg-zinc-200 transition"
-        >
+        <button onClick={toggleTimer} className="relative z-10 bg-white text-black font-bold px-8 py-3 rounded hover:bg-zinc-200 transition">
           INITIALIZE SECURE TIMER
         </button>
       )}
 
-      {/* Auto Exit Button (Visible only after 45 mins / 2700 seconds) */}
       {seconds >= 2700 && (
-        <button 
-          onClick={handleAutoExit} 
-          className="relative z-10 bg-red-600 text-white font-bold px-8 py-3 rounded animate-bounce shadow-xl"
-        >
+        <button onClick={handleAutoExit} className="relative z-10 bg-red-600 text-white font-bold px-8 py-3 rounded animate-bounce">
           EXIT EXAM
         </button>
       )}
 
-      {/* Security Warning */}
       {isActive && seconds < 2700 && (
         <p className="relative z-10 mt-6 text-red-500 font-bold animate-pulse uppercase tracking-widest text-sm">
-          ⚠️ SECURE MODE: Do not switch tabs. Audio monitoring active.
+          ⚠️ LOCKDOWN ACTIVE: Full-screen enforced.
         </p>
       )}
     </main>
