@@ -127,8 +127,12 @@ export default function GroupIntelPage() {
   }, [quizzes, selectedAnswers]);
 
   // Option click hote hi data database me sync hoga live!
-  const handleOptionClick = async (quizId: number, optionChosen: string) => {
+ const handleOptionClick = async (quizId: number, optionChosen: string) => {
+    // SECURITY: Agar pehle se answer selected hai, function wahi rok do
     if (selectedAnswers[quizId]) return; 
+    
+    // UI Update immediate (Optimistic UI)
+    setSelectedAnswers((prev) => ({ ...prev, [quizId]: optionChosen }));
 
     const token = localStorage.getItem("war_token");
     const secondsTaken = Math.max(1, Math.floor((Date.now() - pageLoadTime) / 1000));
@@ -136,39 +140,23 @@ export default function GroupIntelPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}/submit`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          selected_option: optionChosen,
-          time_taken_seconds: secondsTaken
-        })
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ selected_option: optionChosen, time_taken_seconds: secondsTaken })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSelectedAnswers((prev) => ({
-          ...prev,
-          [quizId]: optionChosen,
-        }));
-      } else {
-        alert(`⚠️ ${data.detail || "Submission block failed."}`);
-        setSelectedAnswers((prev) => ({
-          ...prev,
-          [quizId]: optionChosen, 
-        }));
+      if (!response.ok) {
+        // Agar backend error de (jaise Already Answered), toh UI se answer hata do
+        setSelectedAnswers((prev) => {
+           const newState = { ...prev };
+           delete newState[quizId];
+           return newState;
+        });
+        alert("⚠️ Error: Response not accepted by server.");
       }
     } catch (err) {
       console.error("Tracking connection failure.");
-      setSelectedAnswers((prev) => ({
-        ...prev,
-        [quizId]: optionChosen,
-      }));
     }
   };
-
   return (
     <main className="flex min-h-screen flex-col items-center bg-slate-950 p-6 font-sans text-slate-200 lg:p-12">
       
