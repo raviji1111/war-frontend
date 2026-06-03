@@ -8,6 +8,7 @@ export default function Navbar() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("war_token");
@@ -15,16 +16,27 @@ export default function Navbar() {
     
     setIsLoggedIn(!!token);
 
-    // FIX: .toLowerCase() aur .trim() lagaya hai taaki email case-sensitive na rahe
-    // Agar user_email mein space ho ya capital letter, tab bhi ye check pass ho jayega
+    // Email check logic
     const normalizedEmail = userEmail.toLowerCase().trim();
     setIsAdmin(normalizedEmail === "ravik61285@gmail.com");
+
+    // Timer status check logic (Lockdown mode)
+    const checkTimer = () => {
+      const status = localStorage.getItem("timer_active") === "true";
+      setIsTimerActive(status);
+    };
     
+    // Check every second to hide/show buttons if timer changes
+    const interval = setInterval(checkTimer, 1000);
+    checkTimer(); 
+    
+    return () => clearInterval(interval);
   }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("war_token");
     localStorage.removeItem("user_email");
+    localStorage.removeItem("timer_active");
     router.push("/login");
   };
 
@@ -48,12 +60,15 @@ export default function Navbar() {
           <Link href="/dashboard" className={pathname === '/dashboard' ? 'text-yellow-500 border-b-2 border-yellow-500' : 'hover:text-white'}>DASHBOARD</Link>
           <Link href="/leaderboard" className="hover:text-white">LEADERBOARD</Link>
           
-          {/* Admin link secure ho chuka hai */}
+          {/* Admin link */}
           {isAdmin && (
              <Link href="/admin" className={pathname === '/admin' ? 'text-red-500 border-b-2 border-red-500' : 'hover:text-red-500'}>ADMIN</Link>
           )}
 
-          <button onClick={handleLogout} className="hover:text-red-500">LOGOUT</button>
+          {/* 🛡️ LOCKDOWN MODE: Logout button tab dikhega jab timer active NAHI hoga */}
+          {!isTimerActive && (
+            <button onClick={handleLogout} className="hover:text-red-500">LOGOUT</button>
+          )}
         </div>
       </div>
     </nav>
