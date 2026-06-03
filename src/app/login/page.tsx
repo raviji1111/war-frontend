@@ -25,7 +25,9 @@ export default function LoginPage() {
     setMessage("");
     setIsLoading(true);
 
-    const endpoint = isLoginMode ? "http://127.0.0.1:8000/token" : "http://127.0.0.1:8000/signup";
+   // Line 28 ko replace karke ye likho:
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
     
     const payload = isLoginMode 
       ? new URLSearchParams({ username: email, password: password })
