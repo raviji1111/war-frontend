@@ -28,7 +28,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
    // Line 28 ko replace karke ye likho:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "${API_BASE_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || `${API_BASE_URL}`;
 const endpoint = isLoginMode ? `${API_URL}/token` : `${API_URL}/signup`;
     
     const payload = isLoginMode 

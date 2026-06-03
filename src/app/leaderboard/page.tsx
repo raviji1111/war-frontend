@@ -12,7 +12,7 @@ export default function Leaderboard() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch("${API_BASE_URL}/leaderboard");
+        const response = await fetch(`${API_BASE_URL}/leaderboard`);
         if (!response.ok) {
           throw new Error("Failed to fetch data");
         }

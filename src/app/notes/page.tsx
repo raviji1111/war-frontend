@@ -31,8 +31,8 @@ export default function NotesPage() {
     }
 
     try {
-      const response = await fetch("${API_BASE_URL}/notes", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API_BASE_URL}/notes`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -57,7 +57,7 @@ export default function NotesPage() {
     const token = localStorage.getItem("war_token");
 
     try {
-      const response = await fetch("${API_BASE_URL}/notes", {
+      const response = await fetch(`${API_BASE_URL}/notes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
