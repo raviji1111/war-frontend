@@ -43,7 +43,7 @@ export default function AIChat() {
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`p-4 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-green-700 text-white' : 'bg-zinc-800 text-zinc-100'}`}>
-              // Isse replace kar do:
+              
 <div className="prose prose-invert prose-sm text-sm">
   <ReactMarkdown>
     {m.content}
