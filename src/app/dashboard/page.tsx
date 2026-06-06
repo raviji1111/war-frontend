@@ -47,17 +47,20 @@ export default function Dashboard() {
 
   // --- AI CHAT LOGIC (Added) ---
   // dashboard/page.tsx mein askKimi function replace karo
+ // dashboard/page.tsx mein ye naya askKimi function daalo
   const askKimi = async () => {
     if (!aiMsg) return;
     setIsAiLoading(true);
     try {
-      // Yahan URL check karo: /api/kimi-chat
-      const res = await fetch("https://war-backend-1.onrender.com/api/kimi-chat", {
+      // URL ko /api/kimi-chat se badal kar /api/chat kar diya hai
+      const res = await fetch("https://war-backend-1.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: aiMsg }),
       });
+      
       const data = await res.json();
+      // Backend response structure check kar lena, agar error ho to batao
       setAiResponse(data.choices[0].message.content);
     } catch (e) {
       setAiResponse("Backend connection error. Check Render logs.");
