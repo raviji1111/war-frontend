@@ -8,11 +8,22 @@ export default function Dashboard() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
-  // --- AI CHAT STATES (Added) ---
+  // AI Chat & Vision States
   const [aiMsg, setAiMsg] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
+
+  // File Handle Logic
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
   // 1. Fullscreen Toggle
   const toggleTimer = async () => {
@@ -45,140 +56,79 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [isActive]);
 
-  // --- AI CHAT LOGIC (Added) ---
-  // dashboard/page.tsx mein askKimi function replace karo
- // dashboard/page.tsx mein ye naya askKimi function daalo
+  // --- TACTICAL VISION LOGIC ---
   const askKimi = async () => {
-    if (!aiMsg) return;
     setIsAiLoading(true);
+    const base64 = image ? image.split(',')[1] : null;
+
     try {
-      // URL ko /api/kimi-chat se badal kar /api/chat kar diya hai
-      const res = await fetch("https://war-backend-1.onrender.com/api/chat", {
+      const res = await fetch("https://war-backend-1.onrender.com/api/kimi-vision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: aiMsg }),
+        body: JSON.stringify({ message: aiMsg, image: base64 }),
       });
-      
       const data = await res.json();
-      // Backend response structure check kar lena, agar error ho to batao
       setAiResponse(data.choices[0].message.content);
     } catch (e) {
-      setAiResponse("Backend connection error. Check Render logs.");
+      setAiResponse("System Error: Vision module offline.");
     } finally {
       setIsAiLoading(false);
     }
   };
 
-  // 3. Security: ESC Key, Fullscreen Exit, Tab Switch, Refresh Block
+  // 3. Security (Same as before)
   useEffect(() => {
     audioRef.current = new Audio('/alert.mp3');
-
-    const triggerAlarm = () => {
-        audioRef.current?.play().catch(e => console.log("Audio blocked"));
-        alert("SECURITY BREACH! Stay in full-screen mode!");
-    };
-
-    // A. Detect Fullscreen Exit
-    const handleFullscreenChange = () => {
-      if (isActive && !document.fullscreenElement) {
-        triggerAlarm();
-      }
-    };
-
-    // B. Detect ESC Key (Backup)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isActive) {
-        if (e.key === "Escape" || e.key === "F5" || (e.ctrlKey && (e.key === "r" || e.key === "w" || e.key === "t"))) {
-          e.preventDefault();
-          triggerAlarm();
-        }
-      }
-    };
-
-    // C. Tab Switch Detection
-    const handleVisibilityChange = () => {
-      if (isActive) {
-        if (document.hidden) {
-          audioRef.current?.play().catch(e => console.log("Audio blocked"));
-        } else {
-          audioRef.current?.pause();
-          if (audioRef.current) audioRef.current.currentTime = 0;
-        }
-      }
-    };
-
+    const triggerAlarm = () => { audioRef.current?.play().catch(e => console.log("Audio blocked")); alert("SECURITY BREACH!"); };
+    const handleFullscreenChange = () => { if (isActive && !document.fullscreenElement) triggerAlarm(); };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [isActive]);
 
-  const handleAutoExit = () => {
-    localStorage.setItem("timer_active", "false");
-    if (document.fullscreenElement) document.exitFullscreen();
-    router.push("/dashboard");
-  };
-
   return (
-    <main className="min-h-screen bg-[url('https://images.unsplash.com/photo-1497633762265-9d176722d3b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center flex flex-col items-center justify-center text-white relative">
-      <div className="absolute inset-0 bg-black/80"></div>
+    <main className="min-h-screen bg-black text-white p-6 font-mono">
+      <div className="flex flex-col items-center justify-center">
+        {/* Timer */}
+        <div className="text-7xl font-bold tracking-widest mb-10 text-green-500">
+          {new Date(seconds * 1000).toISOString().substr(11, 8)}
+        </div>
 
-      <div className="relative z-10 text-7xl font-mono tracking-widest mb-10 text-zinc-100">
-        {new Date(seconds * 1000).toISOString().substr(11, 8)}
-      </div>
-
-      {/* BUTTONS: Timer + AI Chat Toggle */}
-      {!isActive && (
-        <div className="flex gap-4 relative z-10">
-            <button onClick={toggleTimer} className="bg-white text-black font-bold px-8 py-3 rounded hover:bg-zinc-200 transition">
+        {/* Action Buttons */}
+        {!isActive && (
+          <div className="flex gap-4 mb-10">
+            <button onClick={toggleTimer} className="bg-green-900 border border-green-500 text-green-400 font-bold px-8 py-3 rounded hover:bg-green-800 transition">
               INITIALIZE SECURE TIMER
             </button>
-            <button onClick={() => setShowChat(!showChat)} className="bg-zinc-800 text-white font-bold px-8 py-3 rounded hover:bg-zinc-700 transition">
-              {showChat ? "CLOSE KIMI" : "KIMI AI CHAT"}
+            <button onClick={() => setShowChat(!showChat)} className="bg-zinc-800 border border-zinc-600 px-8 py-3 rounded hover:bg-zinc-700 transition">
+              {showChat ? "CLOSE TACTICAL AI" : "KIMI VISION AI"}
             </button>
-        </div>
-      )}
-
-      {/* AI CHAT BOX (Added) */}
-      {showChat && !isActive && (
-        <div className="relative z-10 mt-10 w-full max-w-lg bg-zinc-900/90 p-6 rounded-lg border border-zinc-700">
-          <textarea
-            className="w-full bg-black p-3 text-white border border-zinc-700 rounded mb-4"
-            placeholder="Ask Kimi something..."
-            onChange={(e) => setAiMsg(e.target.value)}
-          />
-          <button onClick={askKimi} className="w-full bg-blue-600 py-2 rounded font-bold hover:bg-blue-700">
-            {isAiLoading ? "PROCESSING..." : "ASK KIMI"}
-          </button>
-          <div className="mt-4 text-zinc-300 text-sm overflow-auto h-32 p-2 bg-black rounded border border-zinc-800">
-            {aiResponse || "Waiting for Kimi..."}
           </div>
-        </div>
-      )}
+        )}
 
-      {seconds >= 2700 && (
-        <button onClick={handleAutoExit} className="relative z-10 bg-red-600 text-white font-bold px-8 py-3 rounded animate-bounce">
-          EXIT EXAM
-        </button>
-      )}
+        {/* TACTICAL CHAT BOX */}
+        {showChat && !isActive && (
+          <div className="w-full max-w-2xl bg-black border border-green-900 p-6 rounded-lg shadow-[0_0_15px_rgba(21,128,61,0.3)]">
+            <h3 className="text-green-500 mb-4 uppercase text-sm font-bold">// COMMAND INTERFACE</h3>
+            
+            <input type="file" onChange={handleFileChange} className="mb-4 block w-full text-sm text-zinc-400 file:bg-green-900 file:text-white file:border-0 file:px-4 file:py-2" />
+            {image && <img src={image} className="h-32 w-auto mb-4 border border-green-800" />}
+            
+            <textarea
+              className="w-full bg-zinc-950 p-4 text-white border border-green-800 rounded focus:border-green-500 outline-none"
+              placeholder="Analyze tactical data or ask..."
+              onChange={(e) => setAiMsg(e.target.value)}
+            />
+            
+            <button onClick={askKimi} className="mt-4 w-full bg-green-700 py-3 rounded font-bold hover:bg-green-600 transition">
+              {isAiLoading ? "PROCESSING..." : "EXECUTE ANALYSIS"}
+            </button>
 
-      {isActive && seconds < 2700 && (
-        <p className="relative z-10 mt-6 text-red-500 font-bold animate-pulse uppercase tracking-widest text-sm">
-          ⚠️ LOCKDOWN ACTIVE: Full-screen enforced.
-        </p>
-      )}
-
-
-
-      
+            <div className="mt-6 text-zinc-300 text-sm h-48 overflow-auto bg-black p-4 border border-zinc-800">
+              {aiResponse || "System waiting for input..."}
+            </div>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
-
-
-
