@@ -46,11 +46,13 @@ export default function Dashboard() {
   }, [isActive]);
 
   // --- AI CHAT LOGIC (Added) ---
+  // dashboard/page.tsx mein askKimi function replace karo
   const askKimi = async () => {
     if (!aiMsg) return;
     setIsAiLoading(true);
     try {
-      const res = await fetch("https://war-backend-1.onrender.com/api/chat", {
+      // Yahan URL check karo: /api/kimi-chat
+      const res = await fetch("https://war-backend-1.onrender.com/api/kimi-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: aiMsg }),
@@ -58,12 +60,12 @@ export default function Dashboard() {
       const data = await res.json();
       setAiResponse(data.choices[0].message.content);
     } catch (e) {
-      setAiResponse("Backend connection error.");
+      setAiResponse("Backend connection error. Check Render logs.");
     } finally {
       setIsAiLoading(false);
     }
   };
-
+  
   // 3. Security: ESC Key, Fullscreen Exit, Tab Switch, Refresh Block
   useEffect(() => {
     audioRef.current = new Audio('/alert.mp3');
