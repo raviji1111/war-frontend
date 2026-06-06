@@ -8,6 +8,12 @@ export default function Dashboard() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
+  // --- AI CHAT STATES (Added) ---
+  const [aiMsg, setAiMsg] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+
   // 1. Fullscreen Toggle
   const toggleTimer = async () => {
     if (!isActive) {
@@ -38,6 +44,25 @@ export default function Dashboard() {
     }
     return () => clearInterval(interval);
   }, [isActive]);
+
+  // --- AI CHAT LOGIC (Added) ---
+  const askKimi = async () => {
+    if (!aiMsg) return;
+    setIsAiLoading(true);
+    try {
+      const res = await fetch("https://war-backend-1.onrender.com/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: aiMsg }),
+      });
+      const data = await res.json();
+      setAiResponse(data.choices[0].message.content);
+    } catch (e) {
+      setAiResponse("Backend connection error.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   // 3. Security: ESC Key, Fullscreen Exit, Tab Switch, Refresh Block
   useEffect(() => {
@@ -102,10 +127,33 @@ export default function Dashboard() {
         {new Date(seconds * 1000).toISOString().substr(11, 8)}
       </div>
 
+      {/* BUTTONS: Timer + AI Chat Toggle */}
       {!isActive && (
-        <button onClick={toggleTimer} className="relative z-10 bg-white text-black font-bold px-8 py-3 rounded hover:bg-zinc-200 transition">
-          INITIALIZE SECURE TIMER
-        </button>
+        <div className="flex gap-4 relative z-10">
+            <button onClick={toggleTimer} className="bg-white text-black font-bold px-8 py-3 rounded hover:bg-zinc-200 transition">
+              INITIALIZE SECURE TIMER
+            </button>
+            <button onClick={() => setShowChat(!showChat)} className="bg-zinc-800 text-white font-bold px-8 py-3 rounded hover:bg-zinc-700 transition">
+              {showChat ? "CLOSE KIMI" : "KIMI AI CHAT"}
+            </button>
+        </div>
+      )}
+
+      {/* AI CHAT BOX (Added) */}
+      {showChat && !isActive && (
+        <div className="relative z-10 mt-10 w-full max-w-lg bg-zinc-900/90 p-6 rounded-lg border border-zinc-700">
+          <textarea
+            className="w-full bg-black p-3 text-white border border-zinc-700 rounded mb-4"
+            placeholder="Ask Kimi something..."
+            onChange={(e) => setAiMsg(e.target.value)}
+          />
+          <button onClick={askKimi} className="w-full bg-blue-600 py-2 rounded font-bold hover:bg-blue-700">
+            {isAiLoading ? "PROCESSING..." : "ASK KIMI"}
+          </button>
+          <div className="mt-4 text-zinc-300 text-sm overflow-auto h-32 p-2 bg-black rounded border border-zinc-800">
+            {aiResponse || "Waiting for Kimi..."}
+          </div>
+        </div>
       )}
 
       {seconds >= 2700 && (
