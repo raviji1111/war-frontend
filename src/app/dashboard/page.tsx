@@ -65,7 +65,7 @@ export default function Dashboard() {
       setIsAiLoading(false);
     }
   };
-  
+
   // 3. Security: ESC Key, Fullscreen Exit, Tab Switch, Refresh Block
   useEffect(() => {
     audioRef.current = new Audio('/alert.mp3');
@@ -169,6 +169,13 @@ export default function Dashboard() {
           ⚠️ LOCKDOWN ACTIVE: Full-screen enforced.
         </p>
       )}
+
+
+
+      
     </main>
   );
 }
+
+
+
