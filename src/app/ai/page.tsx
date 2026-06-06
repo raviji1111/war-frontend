@@ -1,73 +1,71 @@
 "use client";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function AIChat() {
-  const [messages, setMessages] = useState<{role: string, content: string, image?: string}[]>([]);
+  const [messages, setMessages] = useState<{role: 'user' | 'ai', content: string}[]>([]);
   const [input, setInput] = useState("");
-  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-    if (!input && !image) return;
+    if (!input.trim()) return;
 
-    const newMsg = { role: "user", content: input, image: image || undefined };
-    setMessages((prev) => [...prev, newMsg]);
+    const userMsg = { role: 'user' as const, content: input };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setImage(null);
     setLoading(true);
 
     try {
       const res = await fetch("https://war-backend-1.onrender.com/api/kimi-vision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, image: image ? image.split(',')[1] : null }),
+        body: JSON.stringify({ message: input }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "ai", content: data.choices[0].message.content }]);
+      const aiMsg = { role: 'ai' as const, content: data.choices[0].message.content };
+      setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "ai", content: "Error: Backend unreachable." }]);
+      setMessages((prev) => [...prev, { role: 'ai', content: "Error: Could not connect to Kimi." }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="h-screen bg-black text-white flex flex-col items-center">
+    <main className="h-screen bg-[#0d0d0d] text-white flex flex-col">
       {/* Header */}
-      <div className="w-full p-4 border-b border-zinc-800 text-center font-bold text-green-500">
-        WAR PROJECT // TACTICAL VISION AI
+      <div className="p-4 border-b border-zinc-800 text-center font-bold text-green-500">
+        WAR PROJECT // TACTICAL AI
       </div>
 
-      {/* Chat Area */}
-      <div className="w-full max-w-2xl flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat Container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`p-4 rounded-xl max-w-[80%] ${m.role === 'user' ? 'bg-green-900' : 'bg-zinc-800'}`}>
-              {m.image && <img src={m.image} className="w-full rounded mb-2" />}
-              <p className="text-sm">{m.content}</p>
+            <div className={`p-4 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-green-700 text-white' : 'bg-zinc-800 text-zinc-100'}`}>
+              // Isse replace kar do:
+<div className="prose prose-invert prose-sm text-sm">
+  <ReactMarkdown>
+    {m.content}
+  </ReactMarkdown>
+</div>
             </div>
           </div>
         ))}
-        {loading && <div className="text-zinc-500 text-sm italic">Kimi is thinking...</div>}
+        {loading && <div className="text-zinc-500 text-sm italic animate-pulse">Kimi is typing...</div>}
       </div>
 
-      {/* Input Area */}
-      <div className="w-full max-w-2xl p-4 border-t border-zinc-800 bg-black">
-        <div className="flex gap-2 mb-2">
-            <input type="file" onChange={(e) => {
-                const f = e.target.files?.[0];
-                if(f) { const r = new FileReader(); r.onloadend = () => setImage(r.result as string); r.readAsDataURL(f); }
-            }} className="text-xs text-zinc-500" />
-            {image && <span className="text-green-500 text-xs">Image attached!</span>}
-        </div>
-        <div className="flex gap-2">
+      {/* Input Box */}
+      <div className="p-4 border-t border-zinc-800 bg-[#0d0d0d]">
+        <div className="max-w-3xl mx-auto flex gap-3">
           <textarea 
-            className="flex-1 bg-zinc-900 p-3 rounded-lg outline-none border border-zinc-700" 
-            placeholder="Type your tactical query..."
+            className="flex-1 bg-zinc-900 p-3 rounded-xl border border-zinc-700 outline-none focus:border-green-500" 
+            placeholder="Ask anything..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }}}
           />
-          <button onClick={handleSend} className="bg-green-600 px-6 rounded-lg font-bold">SEND</button>
+          <button onClick={handleSend} className="bg-green-600 px-6 rounded-xl font-bold hover:bg-green-500 transition">SEND</button>
         </div>
       </div>
     </main>
